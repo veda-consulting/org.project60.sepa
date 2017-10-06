@@ -127,4 +127,29 @@ class CRM_Sepa_Logic_Status {
     }
     return $list;
   }
+
+
+  public static function translateMandateStatusToBacsReference( $status ) {
+    switch ($status) {
+      case 'INIT':
+        return "0N";
+
+      case 'FRST':
+      case 'OOFF':
+        return "01";
+
+      case 'RCUR':
+      case 'SENT':
+        return "17";
+
+      case 'COMPLETE':
+        return "19";
+
+      case 'ONHOLD':
+      case 'PARTIAL':
+      case 'INVALID':
+      default:
+        return "18";
+    }
+  }
 }

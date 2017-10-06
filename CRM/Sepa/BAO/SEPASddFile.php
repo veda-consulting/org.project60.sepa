@@ -74,5 +74,94 @@ class CRM_Sepa_BAO_SEPASddFile extends CRM_Sepa_DAO_SEPASddFile {
     $footer = $template->fetch('CRM/Sepa/xml/file_footer.tpl');
     return $head.$xml.$footer;
   }
+
+  function generateTXT($id, $fileName) {
+    $txt = "";
+    $txgroup = new CRM_Sepa_BAO_SEPATransactionGroup();
+    $txgroup->sdd_file_id = $id;
+    $txgroup->find();
+    
+    while ($txgroup->fetch()) {
+      $mandateDetails = self::getMandateDetailsByTxGroupId($txgroup->id);
+      $txt .= $mandateDetails."\n";
+    }
+    $config = CRM_Core_Config::singleton();
+    $filepath = $config->customFileUploadDir;
+    $filePathName   = "{$filepath}/{$fileName}";
+    $handle = fopen($filePathName, 'w');
+    file_put_contents($filePathName, $txt);
+    fclose($handle);
+    return $txt;
+  }
+
+  //This SQL is copy of SepaTransactionGroup::generateXML function, this need to be move in Utils function so we reuse in both place
+  static function getMandateDetailsByTxGroupId($txGroupId) {
+    if (empty($txGroupId)) {
+      return array();
+    }
+    
+    $r = NULL;
+    $queryParams= array (1=>array($txGroupId, 'Positive'));
+    $query="
+      SELECT
+        c.id AS cid,
+        civicrm_contact.display_name,
+        invoice_id,
+        currency,
+        total_amount,
+        receive_date,
+        contribution_recur_id,
+        contribution_status_id,
+        mandate.*
+      FROM civicrm_contribution AS c
+      JOIN civicrm_sdd_contribution_txgroup AS g ON g.contribution_id=c.id
+      JOIN civicrm_sdd_mandate AS mandate ON mandate.id = IF(c.contribution_recur_id IS NOT NULL,
+        (SELECT id FROM civicrm_sdd_mandate WHERE entity_table = 'civicrm_contribution_recur' AND entity_id = c.contribution_recur_id),
+        (SELECT id FROM civicrm_sdd_mandate WHERE entity_table = 'civicrm_contribution' AND entity_id = c.id)
+      )
+      JOIN civicrm_contact ON c.contact_id = civicrm_contact.id
+      WHERE g.txgroup_id = %1
+        AND contribution_status_id != 3
+        AND mandate.is_enabled = true
+    "; //and not cancelled
+    $contrib = CRM_Core_DAO::executeQuery($query, $queryParams);
+    while ($contrib->fetch()) {
+      $t = $contrib->toArray();
+      //Build Bacs String in format
+      $str = self::lodgementFileformat($t);
+      $r .= $str."\n";
+    }
+    return $r;    
+  }
+
+  public static function lodgementFileformat($mandateDetails, $defaultCode = NULL) {
+    if (empty($mandateDetails)) {
+      return array();
+      //"BSORTCDE","BANKACNO","ACNAME","AMOUNT","BANKREF","0N"
+    }
+
+    // Check if we have default code
+    if (!empty($defaultCode)) {
+      $transcation_code = $defaultCode;
+    } else {
+      $transcation_code = CRM_Sepa_Logic_Status::translateMandateStatusToBacsReference($mandateDetails['status']);
+    }
+    //Build Bacs String in format
+    //"BSORTCDE","BANKACNO","ACNAME","AMOUNT","BANKREF","0N"
+    $str = "";
+    $str .= '"'.$mandateDetails['sort_code'].'"';
+    $str .= ',';
+    $str .= '"'.$mandateDetails['account_num'].'"';
+    $str .= ',';
+    $str .= '"'.$mandateDetails['display_name'].'"';
+    $str .= ',';
+    $str .= '"'.$mandateDetails['total_amount'].'"';
+    $str .= ',';
+    $str .= '"'.$mandateDetails['reference'].'"';
+    $str .= ',';
+    $str .= '"'.(string)$transcation_code.'"';
+
+    return $str;
+  }
 }
 

@@ -52,8 +52,9 @@ function _civicrm_api3_sepa_alternative_batching_close_spec (&$params) {
  */
 function civicrm_api3_sepa_alternative_batching_createxml($params) {
   $override = (isset($params['override'])) ? $params['override'] : false;
+  $format = (isset($params['format'])) ? $params['format'] : 'xml';
   
-  $result = CRM_Sepa_BAO_SEPATransactionGroup::createFile((int) $params['txgroup_id'], $override);
+  $result = CRM_Sepa_BAO_SEPATransactionGroup::createFile((int) $params['txgroup_id'], $override, $format);
   if (is_numeric($result)) {
     // this was succesfull -> load the sepa file
     return civicrm_api('SepaSddFile', 'getsingle', array('id'=>$result, 'version'=>3));

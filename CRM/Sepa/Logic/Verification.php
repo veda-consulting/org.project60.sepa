@@ -76,4 +76,82 @@ class CRM_Sepa_Logic_Verification {
       return 0;
     }
   }
+
+  /**
+   * Verification method for verifying UK Bank Account & Sort Code
+   */
+  static function verifyAccountSortCode($account, $sortcode) {
+    $result = array('is_error' => 0);
+
+    // TEST Details
+    if ($account == '12345678' && in_array($sortcode, array('000000', '000009'))) {
+      $result['fields'] = array(
+        'IsCorrect' => 1,
+        'IBAN'      => 'GB27NWBK00009912345678',
+        'Bank'      => 'TEST BANK PLC',
+        'BankBIC'   => 'NWBKGB21',
+      );
+      CRM_Core_Error::debug_var('$result', $result);
+      return $result;
+    }
+
+    $ukacscKey = CRM_Core_BAO_Setting::getItem('SEPA Direct Debit Preferences', 'ukbank_acsc_validator_key');
+    if (empty($ukacscKey)) {
+      CRM_Core_Error::debug_log_message(ts('SEPA UK Validator API Key not set.'));
+      return $result;
+    }
+    $url  = "https://services.postcodeanywhere.co.uk/BankAccountValidation/Interactive/Validate/v2.00/xmla.ws?";
+    $url .= "&Key=" . urlencode($ukacscKey);
+    $url .= "&AccountNumber=" . urlencode($account);
+    $url .= "&SortCode=" . urlencode($sortcode);
+
+    //Make the request to Postcode Anywhere and parse the XML returned
+    CRM_Core_Error::debug_var('uk account validator $url', $url);
+    $file = simplexml_load_file($url);
+
+    //Check for an error, if there is one then throw an exception
+    if ($file->Columns->Column->attributes()->Name == "Error") {
+      $result['is_error']  = 1; 
+      $result['error']['msg'] = 
+        " [DESCRIPTION] " . $file->Rows->Row->attributes()->Description . 
+        " [CAUSE] " . $file->Rows->Row->attributes()->Cause . 
+        " [RESOLUTION] " . $file->Rows->Row->attributes()->Resolution;
+      $result['error']['description'] = (string)$file->Rows->Row->attributes()->Description;
+      $result['error']['cause']       = (string)$file->Rows->Row->attributes()->Cause;
+      $result['error']['resolution']  = (string)$file->Rows->Row->attributes()->Resolution;
+    }
+
+    //Copy the data
+    if (!empty($file->Rows)) {
+      foreach ($file->Rows->Row as $item) {
+        $result['fields'] = array(
+          'IsCorrect'              => filter_var($item->attributes()->IsCorrect, FILTER_VALIDATE_BOOLEAN),
+          'IsDirectDebitCapable'   => filter_var($item->attributes()->IsDirectDebitCapable, FILTER_VALIDATE_BOOLEAN),
+          'StatusInformation'      => (string)$item->attributes()->StatusInformation,
+          'CorrectedSortCode'      => (string)$item->attributes()->CorrectedSortCode,
+          'CorrectedAccountNumber' => (string)$item->attributes()->CorrectedAccountNumber,
+          'IBAN'                   => (string)$item->attributes()->IBAN,
+          'Bank'                   => (string)$item->attributes()->Bank,
+          'BankBIC'                => (string)$item->attributes()->BankBIC,
+          'Branch'                 => (string)$item->attributes()->Branch,
+          'BranchBIC'              => (string)$item->attributes()->BranchBIC,
+          'ContactAddressLine1'    => (string)$item->attributes()->ContactAddressLine1,
+          'ContactAddressLine2'    => (string)$item->attributes()->ContactAddressLine2,
+          'ContactPostTown'        => (string)$item->attributes()->ContactPostTown,
+          'ContactPostcode'        => (string)$item->attributes()->ContactPostcode,
+          'ContactPhone'           => (string)$item->attributes()->ContactPhone,
+          'ContactFax'             => (string)$item->attributes()->ContactFax,
+          'FasterPaymentsSupported'=> filter_var($item->attributes()->FasterPaymentsSupported, FILTER_VALIDATE_BOOLEAN),
+          'CHAPSSupported'         => filter_var($item->attributes()->CHAPSSupported, FILTER_VALIDATE_BOOLEAN),
+        );
+      }
+    }
+
+    if (!$result['is_error'] && !$result['fields']['IsCorrect']) {
+      $result['is_error']     = 1; 
+      $result['error']['msg'] = ts("Account and Sort Code looks INVALID", array('domain' => 'org.project60.sepa'));
+    }
+    CRM_Core_Error::debug_var('$result', $result);
+    return $result;
+  }
 }

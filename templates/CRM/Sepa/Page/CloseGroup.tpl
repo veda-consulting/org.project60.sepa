@@ -15,6 +15,7 @@
 
 <div class="crm-container" lang="de" xml:lang="de" >
 	<div class="crm-block crm-form-block crm-import-datasource-form-block">
+		{if $fileformat}
 		{if $status eq "closed"}
 			{capture assign=group_text}
 			<font size="+1">{ts domain="org.project60.sepa"}Group '%s' <b>is now closed</b> and cannot be changed any more.{/ts}</font>
@@ -53,8 +54,17 @@
 			{/if}
 			</p>
 		{/if}
+		{else}
+			<fieldset>
+			    <legend>Please select the File format you want to download</legend>
+			    &nbsp;
+			    <input type="radio" name="file_format" id="xml" value="xml" /><label for="xml">XML</label> &nbsp;
+			    <input type="radio" name="file_format" id="txt" value="txt"  /><label for="txt">Text (Bacs)</label> &nbsp;
+			</fieldset>
+		{/if}
 	</div>
 	<p>
+	{if $fileformat}
 	{if $status eq "closed"}
 		<a href="{crmURL p="civicrm/sepa/dashboard" q="status=closed"}" class="button button_export">{ts domain="org.project60.sepa"}Return to dashboard{/ts}</a>
 	{elseif $status eq "invalid"}
@@ -70,6 +80,9 @@
 		{if not $smarty.request.adjust}
 		<a href="{crmURL p="civicrm/sepa/dashboard"}" class="button button_export">{ts domain="org.project60.sepa"}I changed my mind{/ts}</a>
 		{/if}
+	{/if}
+	{else}
+		<a id="generateFile" class="button">{ts domain="org.project60.sepa"}Generate File{/ts}</a>
 	{/if}
 	</p>
 </div>
@@ -88,6 +101,26 @@ window.onbeforeunload = function(e) {
 // if using the buttons, user is allowed to leave :)
 cj("a.button").click(function() {
 	window.onbeforeunload = null;
+});
+
+var txGroupId = "{/literal}{$txgid}{literal}";
+var status = "{/literal}{$status}{literal}";
+var redirectURL = "{/literal}{crmURL p='civicrm/sepa/closegroup' q='reset=1'}{literal}";
+if (txGroupId) {
+	redirectURL = redirectURL + '&group_id=' + txGroupId;
+}
+if (status) {
+	redirectURL = redirectURL + '&status=' + status;
+}
+
+cj('#generateFile').on('click', function(){
+	var selectedFormat = cj('input[name=file_format]:checked').val();
+	if (!selectedFormat) {
+
+	}else{
+		redirectURL = redirectURL + '&format=' + selectedFormat;
+		window.location.href = redirectURL;
+	}
 });
 {/literal}
 </script>

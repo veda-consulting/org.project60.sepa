@@ -52,8 +52,6 @@ cj(function(){
 {/literal}
 {/if}
 
-
-
 <!-- JS Magic -->
 <script type="text/javascript">
 // translated captions
@@ -92,8 +90,11 @@ cj(function() {
 
   // ... but also update SDD elements now
   _sdd_update_elements();
-});
 
+  cj('#validateACSC').appendTo('.ukbank_sort_code-section .content');
+  cj('#validateACSCMsg').appendTo('.ukbank_sort_code-section .content');
+  cj('#validateACSC').show();
+});
 
 // IBAN changed handler
 function sepa_process_iban() {
@@ -208,3 +209,57 @@ cj(function(){
 {/literal}
 </script>
 {/if}
+
+{if $ukbank_acsc_enabled}
+{literal}
+<script type="text/javascript">
+  // js to split sort code into 3 input boxes
+  cj(function() {
+    cj('#ukbank_sort_code').parent().append('<div id ="ukbank_sort_code_block"></div>');
+    cj("#ukbank_sort_code").hide()
+    cj("#ukbank_sort_code_block")
+    .html('<input type = "text" size = "3" maxlength = "2" name = "ukbank_sort_code_block_1" id = "ukbank_sort_code_block_1" class="ukbank_sort_code_block_x"/>'
+      +' - <input type = "text" size = "3" maxlength = "2" name = "ukbank_sort_code_block_2" id = "ukbank_sort_code_block_2" class="ukbank_sort_code_block_x"/>'
+      +' - <input type = "text" size = "3" maxlength = "2" name = "ukbank_sort_code_block_3" id = "ukbank_sort_code_block_3" class="ukbank_sort_code_block_x"/>');
+
+    cj("input.ukbank_sort_code_block_x").change(function() {
+      updateSortCode();
+    });
+    cj("input.ukbank_sort_code_block_x").keyup(function () {
+      if (this.value.length == this.maxLength) {
+        cj(this).next('input.ukbank_sort_code_block_x').focus();
+      }
+    });
+    var fieldValue = cj("#ukbank_sort_code").val();
+    if (fieldValue.length >= 1) {
+      var fieldSplit = fieldValue.split('');
+      var scb = fieldSplit[0] + fieldSplit[1];
+      updateSortCodeBlock('#ukbank_sort_code_block_1', scb);
+
+      scb = fieldSplit[2] + fieldSplit[3];
+      updateSortCodeBlock('#ukbank_sort_code_block_2', scb);
+
+      scb = fieldSplit[4] + fieldSplit[5];
+      updateSortCodeBlock('#ukbank_sort_code_block_3', scb);
+    }
+  });
+
+  function updateSortCode() {
+    var sc1 = cj("input#ukbank_sort_code_block_1").val();
+    var sc2 = cj("input#ukbank_sort_code_block_2").val();
+    var sc3 = cj("input#ukbank_sort_code_block_3").val();
+    var finalFieldValue = sc1 + sc2 + sc3
+    cj('#ukbank_sort_code').val(finalFieldValue);
+  }
+
+  function updateSortCodeBlock(ele, scb) {
+    if (scb.length >= 1) {
+      cj(ele).val(scb);
+    } else {
+      cj(ele).val('');
+    }
+  }
+</script>
+{/literal}
+{/if}
+

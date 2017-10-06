@@ -28,14 +28,25 @@ class CRM_Sepa_Page_CloseGroup extends CRM_Core_Page {
   function run() {
     CRM_Utils_System::setTitle(ts('Close SEPA Group', array('domain' => 'org.project60.sepa')));
     if (isset($_REQUEST['group_id'])) {
-        if (isset($_REQUEST['status']) && ($_REQUEST['status'] == "missed" || $_REQUEST['status'] == "invalid" || $_REQUEST['status'] == "closed")) {
-          $this->assign('status', $_REQUEST['status']);
-        }else{
-          $_REQUEST['status'] = "";
-        }
+      if (isset($_REQUEST['status']) && ($_REQUEST['status'] == "missed" || $_REQUEST['status'] == "invalid" || $_REQUEST['status'] == "closed")) {
+        $this->assign('status', $_REQUEST['status']);
+      }else{
+        $_REQUEST['status'] = "";
+      }
 
-        $group_id = (int) $_REQUEST['group_id'];
-        $this->assign('txgid', $group_id);
+      $group_id = (int) $_REQUEST['group_id'];
+      $this->assign('txgid', $group_id);
+
+      //MV: assign file format, if not found then show form to get file format
+      $fileFormat = NULL;
+      if (!empty($_REQUEST['format'])) {
+        $fileFormat = $_REQUEST['format'];
+      }elseif (!empty($_REQUEST['status'])) {
+        $fileFormat = TRUE;
+      }
+      $this->assign('fileformat', $fileFormat);
+
+      if (!empty($fileFormat)) {
 
         // LOAD/CREATE THE TXFILE
         $group = civicrm_api('SepaTransactionGroup', 'getsingle', array('version'=>3, 'id'=>$group_id));
@@ -74,7 +85,7 @@ class CRM_Sepa_Page_CloseGroup extends CRM_Core_Page {
                   }
                 }
 
-                $xmlfile = civicrm_api('SepaAlternativeBatching', 'createxml', array('txgroup_id'=>$group_id, 'override'=>True, 'version'=>3));
+                $xmlfile = civicrm_api('SepaAlternativeBatching', 'createxml', array('txgroup_id'=>$group_id, 'override'=>True, 'version'=>3, 'format' => $fileFormat));
                 if (isset($xmlfile['is_error']) && $xmlfile['is_error']) {
                   CRM_Core_Session::setStatus("Cannot load for group #".$group_id.".<br/>Error was: ".$xmlfile['error_message'], ts('Error', array('domain' => 'org.project60.sepa')), 'error');
                 }else{
@@ -92,8 +103,9 @@ class CRM_Sepa_Page_CloseGroup extends CRM_Core_Page {
                 }
               }
           }
+        } 
           
-        }
+      }//end file format
     }
 
     parent::run();

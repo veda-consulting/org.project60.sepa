@@ -24,6 +24,7 @@
 class CRM_Core_Payment_SDD extends CRM_Core_Payment {
   protected $_mode = NULL;
   protected $_params = array();
+  protected $_paymentForm = NULL;
   static private $_singleton = NULL;
 
   /**
@@ -90,6 +91,7 @@ class CRM_Core_Payment_SDD extends CRM_Core_Payment {
     $form->assign('sepa_hide_bic', CRM_Sepa_Logic_Settings::getSetting("pp_hide_bic"));
     $form->assign('sepa_hide_billing', CRM_Sepa_Logic_Settings::getSetting("pp_hide_billing"));
     $form->assign('bic_extension_installed', CRM_Sepa_Logic_Settings::isLittleBicExtensionAccessible());
+    $form->assign('ukbank_acsc_enabled', CRM_Sepa_Logic_Settings::getSetting("is_ukbank_acsc"));
 
     CRM_Core_Region::instance('billing-block')->add(
       array('template' => 'CRM/Core/Payment/SEPA/SDD.tpl', 'weight' => -1));
@@ -136,6 +138,8 @@ class CRM_Core_Payment_SDD extends CRM_Core_Payment {
     $params['source']        = substr($params['description'],0,64);
     $params['iban']          = $params['bank_account_number'];
     $params['bic']           = $params['bank_identification_number'];
+    $params['account_num']   = $params['ukbank_account_number'];
+    $params['sort_code']     = $params['ukbank_sort_code'];
     $params['creation_date'] = date('YmdHis');
     $params['status']        = 'PARTIAL';
 
@@ -367,6 +371,8 @@ class CRM_Core_Payment_SDD extends CRM_Core_Payment {
         'cycle_day',
         'start_date',
         'account_holder',
+        'ukbank_account_number',
+        'ukbank_sort_code',
         'bank_account_number',
         'bank_identification_number',
         'bank_name',
@@ -386,7 +392,7 @@ class CRM_Core_Payment_SDD extends CRM_Core_Payment {
     if (version_compare(CRM_Utils_System::version(), '4.6.10', '<')) {
       return parent::getPaymentFormFieldsMetadata();
     } else {
-      return array(
+      $fieldsMD = array(
         'account_holder' => array(
           'htmlType' => 'text',
           'name' => 'account_holder',
@@ -469,6 +475,40 @@ class CRM_Core_Payment_SDD extends CRM_Core_Payment {
           'rules' => array(),
         ),
       );
+
+      $ukbankacsc = CRM_Sepa_Logic_Settings::getSetting("is_ukbank_acsc");
+      if ($ukbankacsc) {
+        $fieldsMD['ukbank_account_number'] = array(
+          'htmlType' => 'text',
+          'name' => 'ukbank_account_number',
+          'title' => ts('UK Bank Account Number', array('domain' => 'org.project60.sepa')),
+          'cc_field' => TRUE,
+          'attributes' => array(
+            'size' => 34,
+            'maxlength' => 34,
+            'autocomplete' => 'off',
+          ),
+          'is_required' => TRUE,
+        );
+        $fieldsMD['ukbank_sort_code'] = array(
+          'htmlType' => 'text',
+          'name' => 'ukbank_sort_code',
+          'title' => ts('UK Bank Sort Code', array('domain' => 'org.project60.sepa')),
+          'cc_field' => TRUE,
+          'attributes' => array(
+            'size' => 20,
+            'maxlength' => 11,
+            'autocomplete' => 'off',
+          ),
+          'is_required' => TRUE,
+        );
+        unset(
+          $fieldsMD['bank_account_number'], 
+          $fieldsMD['bank_identification_number'],
+          $fieldsMD['bank_name']
+        );
+      }
+      return $fieldsMD;
     }
   }
 

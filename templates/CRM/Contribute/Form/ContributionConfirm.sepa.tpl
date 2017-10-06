@@ -47,10 +47,12 @@
   <p id="sepa-confirm-text-recur"><strong>{ts 1=$frequency_words domain="org.project60.sepa"}I want to contribute this amount %1.{/ts}</strong></p>
   {/if}
 
-  {if $bank_account_number}
+  {if $bank_account_number OR $ukbank_account_number}
   <p id="sepa-confirm-text-account">{ts domain="org.project60.sepa"}This payment will be debited from the following account:{/ts}</p>
   <table class="sepa-confirm-text-account-details display" id="sepa-confirm-text-account-details">
     {if $account_holder}<tr><td>{ts domain="org.project60.sepa"}Account Holder{/ts}</td> <td>{$account_holder}</td> </tr>{/if}
+    <tr><td>{ts domain="org.project60.sepa"}UK Account Number{/ts}</td> <td>{$ukbank_account_number}</td> </tr>
+    <tr><td>{ts domain="org.project60.sepa"}UK Sort Code{/ts}</td> <td>{$ukbank_sort_code}</td> </tr>
     <tr><td>{ts domain="org.project60.sepa"}IBAN{/ts}</td> <td>{$bank_account_number}</td> </tr>
     <tr><td>{ts domain="org.project60.sepa"}BIC{/ts}</td>  <td>{$bank_identification_number}</td>  </tr>
     {if $bank_name}<tr><td>{ts domain="org.project60.sepa"}Bank Name{/ts}</td> <td>{$bank_name}</td> </tr>{/if}

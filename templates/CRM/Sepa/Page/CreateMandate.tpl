@@ -93,14 +93,34 @@
 			<td id="iban_converter" rowspan="3" style="vertical-align: middle;">
 			</td>
 		</tr>
-		<tr>	<!-- IBAN -->
+		{if $ukbank_acsc_enabled}
+		<tr>
+			<td></td><td><span style="color: red;" id="validateACSCMsg"></span></td>
+		</tr>
+		<tr>	<!-- UK Bank Account number -->
+			<td>UK Bank Account Number:</td>
+			<td>
+				<input id="ukbank_account_number" name="ukbank_account_number" type="text" size="32" value="{$ukbank_account_number}"/>
+			</td>
+		</tr>
+		<tr>	<!-- Uk Bank Sort code -->
+			<td>UK Bank Sort Code:</td>
+			<td>
+				<input id="ukbank_sort_code" name="ukbank_sort_code" type="hidden" size="14" value="{$ukbank_sort_code}"/>
+				<input type = "text" size = "3" maxlength = "2" name = "ukbank_sort_code_block_1" id = "ukbank_sort_code_block_1" class="ukbank_sort_code_block_x"/>
+				<input type = "text" size = "3" maxlength = "2" name = "ukbank_sort_code_block_2" id = "ukbank_sort_code_block_2" class="ukbank_sort_code_block_x"/>
+				<input type = "text" size = "3" maxlength = "2" name = "ukbank_sort_code_block_3" id = "ukbank_sort_code_block_3" class="ukbank_sort_code_block_x"/>
+			</td>
+		</tr>
+		{/if}
+		<tr{if $ukbank_acsc_enabled} style="display: none;"{/if}>	<!-- IBAN -->
 			<td>IBAN:</td>
 			<td>
 				<input name="iban" type="text" size="32" value="{$iban}"/>
 				<a id="bic_lookup_btn" onClick="sepa_lookup_bic();" hidden="1">lookup BIC</a>
 			</td>
 		</tr>
-		<tr>	<!-- BIC -->
+		<tr{if $ukbank_acsc_enabled} style="display: none;"{/if}>	<!-- BIC -->
 			<td>BIC:</td>
 			<td>
 				<input name="bic" type="text" size="14" value="{$bic}"/>&nbsp;&nbsp;
@@ -209,6 +229,42 @@ var creditor2cycledays = {$creditor2cycledays};
 var creditor2cycledays = [];
 {/if}
 {literal}
+
+{/literal}{if $ukbank_acsc_enabled}{literal}
+
+cj("input.ukbank_sort_code_block_x").change(function() {
+  updateSortCode();
+});
+
+cj("input.ukbank_sort_code_block_x").keyup(function () {
+  if (this.value.length == this.maxLength) {
+    cj(this).next('input.ukbank_sort_code_block_x').focus();
+  }
+});
+
+function updateSortCode() {
+	var sc1 = cj("input#ukbank_sort_code_block_1").val();
+	var sc2 = cj("input#ukbank_sort_code_block_2").val();
+	var sc3 = cj("input#ukbank_sort_code_block_3").val();
+	var finalFieldValue = sc1 + sc2 + sc3
+	cj('#ukbank_sort_code').val(finalFieldValue);
+}
+
+cj("#new_sepa_mandate").on('submit', function(e){
+
+	// Update sort code
+	updateSortCode();
+
+	var account   = cj("#ukbank_account_number").val();
+	var sortcode  = cj("#ukbank_sort_code").val();
+
+	if (account == '' || sortcode == '') {
+		cj('#validateACSCMsg').text({/literal}"{ts domain="org.project60.sepa"}Please fill in both account and sort code.{/ts}"{literal});
+		e.preventDefault();
+	}
+});
+{/literal}{/if}{literal}
+
 // logic for the bank account selector
 cj("#account").change(change_bank_account);
 change_bank_account();

@@ -139,6 +139,10 @@
 	</div>
 </form>
 
+<div class="crm-submit-buttons">
+    <a class="button cancel crm-form-submit" href="/civicrm/contact/view?action=browse&selectedChild=contribute">Done</a>
+</div>
+
 <script type="text/javascript">
 cancel_reason_message = "{ts domain="org.project60.sepa"}You need to specify a cancel reason!{/ts}";
 end_date_message = "{ts domain="org.project60.sepa"}You need to specify a date!{/ts}";

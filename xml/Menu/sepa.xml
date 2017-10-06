@@ -63,4 +63,10 @@
     <title>Delete transaction group</title>
     <access_arguments>administer CiviCRM</access_arguments>
   </item>
+  <item>
+    <path>civicrm/sepa/ukaccountvalidate</path>
+    <page_callback>CRM_Sepa_Logic_Verification::verifyAccountSortCode</page_callback>
+    <title>UK Account and Sort Code Validator</title>
+    <access_arguments>make online contributions</access_arguments>
+  </item>
 </menu>

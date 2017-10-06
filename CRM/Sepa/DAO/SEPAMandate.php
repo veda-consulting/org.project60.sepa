@@ -137,6 +137,18 @@ class CRM_Sepa_DAO_SEPAMandate extends CRM_Core_DAO
    */
   public $contact_id;
   /**
+   * Account number of the debtor
+   *
+   * @var string
+   */
+  public $account_num;
+  /**
+   * Sort Code of the debtor
+   *
+   * @var string
+   */
+  public $sort_code;
+  /**
    * Iban of the debtor
    *
    * @var string
@@ -275,6 +287,22 @@ class CRM_Sepa_DAO_SEPAMandate extends CRM_Core_DAO
           'title' => ts('Contact ID', array('domain' => 'org.project60.sepa')) ,
           'FKClassName' => 'CRM_Contact_DAO_Contact',
         ) ,
+        'account_num' => array(
+          'name' => 'account_num',
+          'type' => CRM_Utils_Type::T_STRING,
+          'title' => ts('Account Number', array('domain' => 'org.project60.sepa')) ,
+          'required' => false,
+          'maxlength' => 64,
+          'size' => CRM_Utils_Type::BIG,
+        ) ,
+        'sort_code' => array(
+          'name' => 'sort_code',
+          'type' => CRM_Utils_Type::T_STRING,
+          'title' => ts('Sort Code', array('domain' => 'org.project60.sepa')) ,
+          'required' => false,
+          'maxlength' => 10,
+          'size' => CRM_Utils_Type::TWELVE,
+        ) ,
         'iban' => array(
           'name' => 'iban',
           'type' => CRM_Utils_Type::T_STRING,
@@ -351,6 +379,8 @@ class CRM_Sepa_DAO_SEPAMandate extends CRM_Core_DAO
         'date' => 'date',
         'creditor_id' => 'creditor_id',
         'contact_id' => 'contact_id',
+        'account_num' => 'account_num',
+        'sort_code' => 'sort_code',
         'iban' => 'iban',
         'bic' => 'bic',
         'type' => 'type',

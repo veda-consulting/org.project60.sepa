@@ -77,6 +77,10 @@ class CRM_Sepa_Page_CreateMandate extends CRM_Core_Page {
     }
 
     $this->assign('bic_extension_installed', CRM_Sepa_Logic_Settings::isLittleBicExtensionAccessible());
+
+    // Is UK Bank account enabled?
+    $this->assign('ukbank_acsc_enabled', CRM_Sepa_Logic_Settings::getSetting("is_ukbank_acsc"));
+
     parent::run();
   }
 
@@ -164,6 +168,9 @@ class CRM_Sepa_Page_CreateMandate extends CRM_Core_Page {
         'creation_date'             => date('YmdHis'),
         'validation_date'           => date('YmdHis'),
         'date'                      => date('YmdHis'),
+        'account_num'               => $_REQUEST['ukbank_account_number'],
+        'sort_code'                 => $_REQUEST['ukbank_sort_code'],
+        'iban'                      => $_REQUEST['iban'],
         'iban'                      => $_REQUEST['iban'],
         'bic'                       => $_REQUEST['bic'],
         'reference'                 => $_REQUEST['reference'],
@@ -174,7 +181,15 @@ class CRM_Sepa_Page_CreateMandate extends CRM_Core_Page {
       );
     // call the hook for mandate generation
 
+    // Save UK bank account and sort code
+    $is_ukbank_acsc = CRM_Sepa_Logic_Settings::getSetting("is_ukbank_acsc");
+    if ($is_ukbank_acsc) {
+      $mandate_data['account_num'] = $_REQUEST['ukbank_account_number'];
+      $mandate_data['sort_code'] = $_REQUEST['ukbank_sort_code'];
+    }
+
     $mandate = civicrm_api('SepaMandate', 'create', $mandate_data);
+
     if (isset($mandate['is_error']) && $mandate['is_error']) {
       $this->processError(
         sprintf(ts("Couldn't create %s mandate for contact #%s", array('domain' => 'org.project60.sepa')), $type, $_REQUEST['contact_id']),
@@ -391,6 +406,25 @@ class CRM_Sepa_Page_CreateMandate extends CRM_Core_Page {
    */
   function validateParameters() {
     $errors = array();
+
+    // Validate UK bank account number and sortcode
+    $is_ukbank_acsc = CRM_Sepa_Logic_Settings::getSetting("is_ukbank_acsc");
+    if ($is_ukbank_acsc) {
+      $account = $_REQUEST['ukbank_account_number'];
+      $sortcode = $_REQUEST['ukbank_sort_code'];
+      $result = CRM_Sepa_Logic_Verification::verifyAccountSortCode($account, $sortcode);
+      if ($result['is_error'] == 1) {
+        $errors['iban'] = $result['error']['msg'];
+        $errors['bic'] = $result['error']['msg'];
+      } else {
+        if (!empty($result['fields']['IBAN'])) {
+          $_REQUEST['iban'] = $result['fields']['IBAN'];
+        }
+        if (!empty($result['fields']['BankBIC'])) {
+          $_REQUEST['bic'] = $result['fields']['BankBIC'];
+        }
+      }
+    }
 
     // check amount
     if (!isset($_REQUEST['total_amount'])) {

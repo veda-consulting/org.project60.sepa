@@ -84,9 +84,30 @@ function sepa_pp_buildForm ( $formName, &$form ) {
 
 	} elseif ($formName == "CRM_Contribute_Form_Contribution_Confirm") {					// PAYMENT PROCESS CONFIRMATION PAGE
 		// only for our SDD payment processors:
-		$pp = civicrm_api("PaymentProcessor", "getsingle", array("id"=>$form->_params["payment_processor"], "version"=>3));
+		$pp = civicrm_api("PaymentProcessor", "getsingle", array("id"=>$form->_params["payment_processor_id"], "version"=>3));
 		if ($pp['class_name'] != "Payment_SDD") return;
 
+    // At this point validation has already happened in Main.php
+    // We now use account & sort code to fetch / override other bank related details
+    $account = CRM_Utils_Array::value('ukbank_account_number', $form->_params);
+    if ($account) {
+      $sortcode = CRM_Utils_Array::value('ukbank_sort_code', $form->_params);
+      $form->assign("ukbank_account_number", $account);
+      $form->assign("ukbank_sort_code",      $sortcode);
+      $result = CRM_Sepa_Logic_Verification::verifyAccountSortCode($account, $sortcode);
+      if (!empty($result['fields']['IBAN'])) {
+        $form->_params['bank_account_number']        = $result['fields']['IBAN'];
+        $form->assign("bank_account_number",           $result['fields']['IBAN']);
+      }
+      if (!empty($result['fields']['BankBIC'])) {
+        $form->_params['bank_identification_number'] = $result['fields']['BankBIC'];
+        $form->assign("bank_identification_number",    $result['fields']['BankBIC']);
+      }
+      if (!empty($result['fields']['Bank'])) {
+        $form->_params['bank_name'] = $result['fields']['Bank'];
+        $form->assign("bank_name",    $result['fields']['Bank']);
+      }
+    }
 		CRM_Core_Region::instance('page-body')->add(array(
 		  'template' => 'CRM/Contribute/Form/ContributionConfirm.sepa.tpl'));
 
@@ -115,7 +136,7 @@ function sepa_pp_buildForm ( $formName, &$form ) {
 
 	} elseif ($formName == "CRM_Contribute_Form_Contribution_ThankYou") {					// PAYMENT PROCESS THANK YOU PAGE
 		// only for our SDD payment processors:
-		$pp = civicrm_api("PaymentProcessor", "getsingle", array("id"=>$form->_params["payment_processor"], "version"=>3));
+		$pp = civicrm_api("PaymentProcessor", "getsingle", array("id"=>$form->_params["payment_processor_id"], "version"=>3));
 		if ($pp['class_name'] != "Payment_SDD") return;
 
 		$mandate_reference = $form->getTemplate()->get_template_vars('trxn_id');
@@ -130,6 +151,8 @@ function sepa_pp_buildForm ( $formName, &$form ) {
 				'start_date'             => CRM_Utils_Array::value('start_date', $form->_params));
 			
 			$form->assign('mandate_reference',          $mandate_reference);
+      $form->assign("ukbank_account_number",      $mandate["account_num"]);
+      $form->assign("ukbank_sort_code",           $mandate["sort_code"]);
 			$form->assign("bank_account_number",        $mandate["iban"]);
 			$form->assign("bank_identification_number", $mandate["bic"]);
 			$form->assign("collection_day",             CRM_Utils_Array::value('cycle_day', $form->_params));

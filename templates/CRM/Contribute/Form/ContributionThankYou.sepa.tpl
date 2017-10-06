@@ -24,7 +24,7 @@
 </div>
 
 
-{if $bank_account_number} {* only for SEPA PPs *}
+{if $bank_account_number OR $ukbank_account_number} {* only for SEPA PPs *}
 <fieldset class="label-left crm-sepa">
 <div class="header-dark">{ts domain="org.project60.sepa"}Direct Debit Payment{/ts}</div>
 
@@ -46,6 +46,14 @@
     <tr id="sepa-thankyou-creditor">
       <td>{ts domain="org.project60.sepa"}Creditor ID{/ts}</td>
       <td class="content">{$creditor_id}</td>
+    </tr>
+    <tr id="sepa-thankyou-ukaccountnumber">
+      <td>{ts domain="org.project60.sepa"}UK Account Number{/ts}</td>
+      <td class="content">{$ukbank_account_number}</td>
+    </tr>
+    <tr id="sepa-thankyou-uksortcode">
+      <td>{ts domain="org.project60.sepa"}UK Sort Code{/ts}</td>
+      <td class="content">{$ukbank_sort_code}</td>
     </tr>
     <tr id="sepa-thankyou-iban">
       <td>{ts domain="org.project60.sepa"}IBAN{/ts}</td>

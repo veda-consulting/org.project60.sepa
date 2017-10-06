@@ -143,7 +143,7 @@ class CRM_Sepa_BAO_SEPATransactionGroup extends CRM_Sepa_DAO_SEPATransactionGrou
    * 
    * @return int id of the sepa file entity created, or an error message string
    */
-  static function createFile($txgroup_id, $override = false) {
+  static function createFile($txgroup_id, $override = false, $format = 'xml') {
     $txgroup = civicrm_api('SepaTransactionGroup', 'getsingle', array('id'=>$txgroup_id, 'version'=>3));
     if (isset($txgroup['is_error']) && $txgroup['is_error']) {
       return "Cannot find transaction group ".$txgroup_id;
@@ -169,7 +169,7 @@ class CRM_Sepa_BAO_SEPATransactionGroup extends CRM_Sepa_DAO_SEPATransactionGrou
       $sepa_file = civicrm_api('SepaSddFile', 'create', array(
             'version'                 => 3,
             'reference'               => $available_name,
-            'filename'                => $available_name.'.xml',
+            'filename'                => $available_name.'.'.$format,
             'latest_submission_date'  => $txgroup['latest_submission_date'],
             'created_date'            => date('YmdHis'),
             'created_id'              => CRM_Core_Session::singleton()->get('userID'),

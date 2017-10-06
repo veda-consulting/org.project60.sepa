@@ -127,6 +127,8 @@ class CRM_Admin_Form_Setting_SepaSettings extends CRM_Admin_Form_Setting
         $hide_bil = CRM_Core_BAO_Setting::getItem('SEPA Direct Debit Preferences', 'pp_hide_billing');
         $bffrdays = CRM_Core_BAO_Setting::getItem('SEPA Direct Debit Preferences', 'pp_buffer_days');
         $mendForm = CRM_Core_BAO_Setting::getItem('SEPA Direct Debit Preferences', 'pp_improve_frequency');
+        $ukacscOpt = CRM_Core_BAO_Setting::getItem('SEPA Direct Debit Preferences', 'is_ukbank_acsc');
+        $ukacscKey = CRM_Core_BAO_Setting::getItem('SEPA Direct Debit Preferences', 'ukbank_acsc_validator_key');
 
         // add creditor form elements
         $this->addElement('text',       'addcreditor_creditor_id',  ts("Creditor Contact", array('domain' => 'org.project60.sepa')));
@@ -142,6 +144,8 @@ class CRM_Admin_Form_Setting_SepaSettings extends CRM_Admin_Form_Setting
         $this->addElement('checkbox',   'pp_hide_bic',              ts("Hide BIC in PP", array('domain' => 'org.project60.sepa')),   "", ($hide_bic?array('checked'=>'checked'):array()));
         $this->addElement('checkbox',   'pp_hide_billing',          ts("Hide Billing in PP", array('domain' => 'org.project60.sepa')),   "", ($hide_bil?array('checked'=>'checked'):array()));
         $this->addElement('checkbox',   'pp_improve_frequency',     ts("Improve payment processor form", array('domain' => 'org.project60.sepa')),   "", ($mendForm?array('checked'=>'checked'):array()));
+        $this->addElement('checkbox',   'is_ukbank_acsc',           ts("UK Bank Account & Sort Code", array('domain' => 'org.project60.sepa')),   "", ($ukacscOpt?array('checked'=>'checked'):array()));
+        $this->addElement('text',       'ukbank_acsc_validator_key', ts("UK Bank Account Validator API Key", array('domain' => 'org.project60.sepa')), array('size' => 30, 'value' => $ukacscKey));
         $this->addElement('text',       'pp_buffer_days',           ts("Recurring Buffer Days", array('domain' => 'org.project60.sepa')), array('size' => 1, 'value' => $bffrdays));
         $this->addElement('hidden',     'edit_creditor_id',         '', array('id' => 'edit_creditor_id'));
         $this->addElement('hidden',     'add_creditor_id',          '', array('id' => 'add_creditor_id'));
@@ -218,6 +222,8 @@ class CRM_Admin_Form_Setting_SepaSettings extends CRM_Admin_Form_Setting
         CRM_Core_BAO_Setting::setItem((isset($values['pp_hide_billing'])      ? "1" : "0"), 'SEPA Direct Debit Preferences', 'pp_hide_billing');
         CRM_Core_BAO_Setting::setItem((isset($values['pp_improve_frequency']) ? "1" : "0"), 'SEPA Direct Debit Preferences', 'pp_improve_frequency');
         CRM_Core_BAO_Setting::setItem((isset($values['pp_buffer_days'])       ? (int) $values['pp_buffer_days'] : "0"), 'SEPA Direct Debit Preferences', 'pp_buffer_days');
+        CRM_Core_BAO_Setting::setItem((isset($values['is_ukbank_acsc'])       ? (int) $values['is_ukbank_acsc'] : "0"), 'SEPA Direct Debit Preferences', 'is_ukbank_acsc');
+        CRM_Core_BAO_Setting::setItem($values['ukbank_acsc_validator_key'],                 'SEPA Direct Debit Preferences', 'ukbank_acsc_validator_key');
 
         $session = CRM_Core_Session::singleton();
         $session->setStatus(ts("Settings successfully saved", array('domain' => 'org.project60.sepa')));

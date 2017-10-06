@@ -584,6 +584,18 @@ function sepa_civicrm_validateForm( $formName, &$fields, &$files, &$form, &$erro
         $errors['payment_instrument_id'] = sprintf(ts("This contribution has a mandate, its payment instrument has to be '%s'", array('domain' => 'org.project60.sepa')), $mandate_pi);
       }
     }
+  } else if ($formName == 'CRM_Contribute_Form_Contribution_Main') {
+    // if UK Bank Account option enabled, validate account & sort code
+    $ukbankacsc = CRM_Sepa_Logic_Settings::getSetting("is_ukbank_acsc");
+    if ($ukbankacsc) {
+      $accountNum = CRM_Utils_Array::value('ukbank_account_number', $fields);
+      $sortCode   = CRM_Utils_Array::value('ukbank_sort_code', $fields);
+      $result = CRM_Sepa_Logic_Verification::verifyAccountSortCode($accountNum, $sortCode);
+      if ($result['is_error'] == 1) {
+        $errors['ukbank_account_number'] = $result['error']['msg'];
+        $errors['ukbank_sort_code']      = $result['error']['msg'];
+      }
+    }
   }
 }
 

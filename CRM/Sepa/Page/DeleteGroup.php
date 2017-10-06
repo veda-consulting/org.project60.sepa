@@ -35,7 +35,7 @@ class CRM_Sepa_Page_DeleteGroup extends CRM_Core_Page {
         $this->assign('txgid', $group_id);
         $txgroup = civicrm_api('SepaTransactionGroup', 'getsingle', array('id'=>$group_id, 'version'=>3));
         if (empty($txgroup['is_error'])) {
-	        $txgroup['status_label'] = CRM_Core_OptionGroup::optionLabel('batch_status', $txgroup['status_id']);
+	        $txgroup['status_label'] = CRM_Core_OptionGroup::getLabel('batch_status', $txgroup['status_id']);
 	        $txgroup['status_name'] = CRM_Core_OptionGroup::getValue('batch_status', $txgroup['status_id'], 'value', 'String', 'name');
 	        $this->assign('txgroup', $txgroup);        	
         } else {

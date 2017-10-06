@@ -31,10 +31,25 @@ class CRM_Sepa_Page_SepaFile extends CRM_Core_Page {
     if ($id>0) {
       //fetch the file, then the group
       $file = new CRM_Sepa_BAO_SEPASddFile();
-      $xml = $file->generateXML($id);
-      header('Content-Type: text/xml; charset=utf-8');
-      //header('Content-Type: text/plain; charset=utf-8');
-      echo $xml;
+      $file->id = $id;
+      $file->find(true);
+      $ext = pathinfo($file->filename, PATHINFO_EXTENSION);
+
+      switch ($ext) {
+        case 'txt':
+          $txt = $file->generateTXT($id, $file->filename);
+          header('Content-Type: text/plain; charset=utf-8');
+          header("Content-Disposition: attachment; filename=" . $file->filename);          
+          echo $txt;
+          CRM_Utils_System::civiExit();
+          break;
+        
+        default:
+          $xml = $file->generateXML($id);
+          header('Content-Type: text/xml; charset=utf-8');
+          echo $xml;
+          break;
+      }
       CRM_Utils_System::civiExit();
     } else {
 

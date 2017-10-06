@@ -299,6 +299,18 @@ div.sdd-add-creditor {
               {$form.pp_buffer_days.html}
             </td>
           </tr>
+          <tr class="crm-pp-form-block-is_ukbank_acsc">
+            <td class="label">{$form.is_ukbank_acsc.label} <a onclick='CRM.help("{ts domain="org.project60.sepa"}UK Bank Account & Sort Code{/ts}", {literal}{"id":"id-is_ukbank_acsc","file":"CRM\/Admin\/Form\/Setting\/SepaSettings"}{/literal}); return false;' href="#" title="{ts domain="org.project60.sepa"}Help{/ts}" class="helpicon">&nbsp;</a></td>
+            <td>
+              {$form.is_ukbank_acsc.html}
+            </td>
+          </tr>
+          <tr class="crm-pp-form-block-ukbank_acsc_validator_key">
+            <td class="label">{$form.ukbank_acsc_validator_key.label} <a onclick='CRM.help("{ts domain="org.project60.sepa"}UK Account Validator API Key{/ts}", {literal}{"id":"id-ukbank_acsc_validator_key","file":"CRM\/Admin\/Form\/Setting\/SepaSettings"}{/literal}); return false;' href="#" title="{ts domain="org.project60.sepa"}Help{/ts}" class="helpicon">&nbsp;</a></td>
+            <td>
+              {$form.ukbank_acsc_validator_key.html}
+            </td>
+          </tr>
        </table>
        <br/>
       <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="bottom"}</div> 
